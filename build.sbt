@@ -2,14 +2,14 @@ organization := "com.github.karasiq"
 
 name := "mapdbutils"
 
-version := "1.0"
+version := "1.1-SNAPSHOT"
 
-isSnapshot := false
+isSnapshot := true
 
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "org.mapdb" % "mapdb" % "2.0-beta7" % "provided",
+  "org.mapdb" % "mapdb" % "2.0-beta8" % "provided",
   "com.typesafe" % "config" % "1.3.0",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )

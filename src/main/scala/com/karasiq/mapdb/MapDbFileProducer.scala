@@ -1,124 +1,47 @@
 package com.karasiq.mapdb
 
 import java.io.Closeable
-import java.nio.file.{Files, Path, Paths}
-import java.util.concurrent.atomic.AtomicReference
+import java.nio.file.{Files, Path}
 
-import com.karasiq.mapdb.transaction.TransactionHolder
+import com.karasiq.mapdb.MapDbWrapper.{MapDbHashMap, MapDbTreeMap}
+import com.karasiq.mapdb.transaction.{CommitSchedulerProvider, TransactionProvider}
+import org.mapdb.DBMaker.Maker
 import org.mapdb._
 
-import scala.collection.JavaConversions._
 import scala.collection.concurrent.TrieMap
-import scala.collection.{Set, mutable}
-import scala.util.control.Exception
 
-sealed class MapDbWrappedMap[K, V, M <: java.util.Map[K, V]](mapDbMap: M) extends mutable.AbstractMap[K, V] {
-  def underlying(): M = mapDbMap
-  
-  override def +=(kv: (K, V)): this.type = {
-    mapDbMap.put(kv._1, kv._2)
-    this
-  }
-
-  override def -=(key: K): this.type = {
-    mapDbMap.remove(key)
-    this
-  }
-
-  override def get(key: K): Option[V] = {
-    if (mapDbMap.containsKey(key)) {
-      Some(mapDbMap.get(key))
-    } else {
-      None
-    }
-  }
-
-  override def iterator: Iterator[(K, V)] = {
-    keysIterator.collect {
-      case key if mapDbMap.containsKey(key) ⇒
-        key → mapDbMap.get(key)
-    }
-  }
-
-  override def valuesIterator: Iterator[V] = {
-    mapDbMap.values().toIterator
-  }
-
-  override def keysIterator: Iterator[K] = {
-    mapDbMap.keySet().toIterator
-  }
-
-  override def keySet: Set[K] = {
-    mapDbMap.keySet()
-  }
-}
-
-sealed abstract class MapDbFile extends Closeable {
-  def db: DB
+/**
+ * MapDB file wrapper
+ */
+sealed abstract class MapDbFile extends MapDbProvider with TransactionProvider with CommitSchedulerProvider with Closeable {
   def path: Path
 
   override def toString: String = s"MapDbFile($path)"
+
+  override def hashCode(): Int = {
+    path.hashCode()
+  }
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case f: MapDbFile ⇒
+      path.equals(f.path)
+
+    case _ ⇒
+      false
+  }
 
   override def close(): Unit = {
     commitScheduler.close()
     if (!db.isClosed) db.close()
   }
 
-  @transient
-  lazy val commitScheduler: CommitScheduler = CommitScheduler(db)
-
-  private val transaction = new AtomicReference[TransactionHolder](null)
-
-  final def withTransaction[T](action: ⇒ T): T = {
-    transaction.get() match {
-      case null ⇒
-        val tx: TransactionHolder = new TransactionHolder {
-          override def rollback(): Unit = {
-            if (transaction.compareAndSet(this, null)) {
-              db.rollback()
-            }
-          }
-
-          override def commit(): Unit = {
-            if (transaction.compareAndSet(this, null)) {
-              db.commit()
-            }
-          }
-        }
-        if (transaction.compareAndSet(null, tx)) {
-          val catcher = Exception.allCatch.withApply { exc ⇒
-            tx.rollback()
-            throw exc
-          }
-          catcher {
-            val result: T = action
-            tx.commit()
-            result
-          }
-        } else {
-          withTransaction[T](action) // Retry
-        }
-
-      case tx: TransactionHolder ⇒
-        val catcher = Exception.allCatch.withApply { exc ⇒
-          tx.rollback()
-          throw exc
-        }
-        catcher {
-          val result: T = action
-          // No commit
-          result
-        }
-    }
+  // Shortcuts
+  def hashMap[K, V](name: String): MapDbHashMap[K, V] = {
+    MapDbWrapper(this).hashMap(name)
   }
-  
-  def wrappedMap[K, V, M <: java.util.Map[K, V]](createMap: DB ⇒ M): MapDbWrappedMap[K, V, M] = {
-    val mapDbMap = createMap(db)
-    new MapDbWrappedMap(mapDbMap)
-  }
-  
-  def hashMap[K, V](name: String): MapDbWrappedMap[K, V, HTreeMap[K, V]] = {
-    this.wrappedMap(_.hashMap(name))
+
+  def treeMap[K, V](name: String): MapDbTreeMap[K, V] = {
+    MapDbWrapper(this).treeMap(name)
   }
 }
 
@@ -130,6 +53,9 @@ object MapDbFile {
   }
 }
 
+/**
+ * MapDB file wrapper factory
+ */
 abstract class MapDbFileProducer {
   protected def setSettings(dbMaker: DBMaker.Maker): DBMaker.Maker
 
@@ -138,30 +64,29 @@ abstract class MapDbFileProducer {
     MapDbFile(setSettings(DBMaker.fileDB(f.toFile)).make(), f)
   }
 
-  private val dbMap = {
-    val map = TrieMap.empty[String, MapDbFile]
-    map.withDefault(key ⇒ {
-      val db = createDb(Paths.get(key))
-      map.putIfAbsent(key, db) match {
-        case Some(existingDb) ⇒ // Already opened
-          db.close()
-          existingDb
-        case None ⇒
-          db
-      }
-    })
-  }
+  private val dbMap = TrieMap.empty[String, MapDbFile]
 
-  final def apply(f: Path): MapDbFile = {
+  final def apply(f: Path): MapDbFile = synchronized {
     dbMap.filter(_._2.db.isClosed).foreach(dbMap -= _._1) // Remove closed
-    dbMap(f.toString)
+    dbMap.getOrElseUpdate(f.toString, createDb(f))
   }
 
-  private def close(k: String): Unit = {
+  private def close(k: String): Unit = synchronized {
     dbMap.remove(k).foreach(_.close())
   }
 
-  final def close(f: Path): Unit = close(f.toString)
+  final def close(f: Path): Unit = synchronized {
+    close(f.toString)
+  }
 
-  final def close(): Unit = dbMap.keys.foreach(close)
+  final def close(): Unit = synchronized {
+    dbMap.keys.foreach(close)
+  }
+}
+
+
+object MapDbFileProducer {
+  def apply(f: DBMaker.Maker ⇒ DBMaker.Maker): MapDbFileProducer = new MapDbFileProducer {
+    override protected def setSettings(dbMaker: Maker): Maker = f(dbMaker)
+  }
 }

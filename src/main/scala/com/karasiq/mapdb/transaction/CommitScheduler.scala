@@ -1,13 +1,22 @@
-package com.karasiq.mapdb
+package com.karasiq.mapdb.transaction
 
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import java.util.{Timer, TimerTask}
 
+import com.karasiq.mapdb.MapDbProvider
 import com.typesafe.config.ConfigFactory
 import org.mapdb.DB
 
+trait CommitSchedulerProvider { self: MapDbProvider ⇒
+  @transient
+  lazy val commitScheduler: CommitScheduler = CommitScheduler(db)
+}
+
+/**
+ * Asynchronous commit scheduler
+ */
 abstract sealed class CommitScheduler extends Closeable {
   private lazy val commitTask = new AtomicReference[Option[TimerTask]](None)
 

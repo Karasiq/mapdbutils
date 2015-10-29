@@ -1,5 +1,6 @@
 import com.karasiq.mapdb.MapDbFile
 import com.karasiq.mapdb.index.MapDbIndex
+import com.karasiq.mapdb.index.MapDbIndex.IndexMaps
 import org.mapdb.DBMaker
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -38,7 +39,7 @@ class MapDbTest extends FlatSpec with Matchers {
   it should "create index" in {
     val mapDb = MapDbFile(DBMaker.heapDB().make())
     val map = mapDb.hashMap[String, String]("test")
-    val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), MapDbIndex.Map.heapTreeMap())
+    val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.heapTreeMap())
 
     mapDb.withTransaction {
       map.put("key1", "value1")

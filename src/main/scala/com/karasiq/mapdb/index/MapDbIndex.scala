@@ -7,7 +7,7 @@ import scala.collection.JavaConversions._
 import scala.collection.immutable.AbstractMap
 
 object MapDbIndex {
-  object Map {
+  object IndexMaps {
     def heapHashMap[K, V](): java.util.Map[K, V] = new java.util.HashMap[K, V]()
     def heapTreeMap[K, V](): java.util.Map[K, V] = new java.util.TreeMap[K, V]()
   }
@@ -37,7 +37,7 @@ object MapDbIndex {
     }
   }
 
-  def secondaryKey[K, V, SK](map: Bind.MapWithModificationListener[K, V], f: (K, V) ⇒ SK, secondaryMap: java.util.Map[SK, K] = Map.heapHashMap()): Map[SK, K] = {
+  def secondaryKey[K, V, SK](map: Bind.MapWithModificationListener[K, V], f: (K, V) ⇒ SK, secondaryMap: java.util.Map[SK, K] = IndexMaps.heapHashMap()): Map[SK, K] = {
     Bind.secondaryKey(map, secondaryMap, new Function2[SK, K, V] {
       override def run(a: K, b: V): SK = {
         f(a, b)
@@ -46,4 +46,6 @@ object MapDbIndex {
 
     new WrappedIndexMap(secondaryMap)
   }
+
+  // TODO: more indexes
 }
