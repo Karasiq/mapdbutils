@@ -24,9 +24,9 @@ class MapDbTest extends FlatSpec with Matchers {
     val map = mapDb.hashMap[String, String]("test")
     intercept[IllegalArgumentException] {
       mapDb.withTransaction {
-        map.put("key1", "value1")
+        map += ("key1" → "value1")
         mapDb.withTransaction {
-          map.put("key2", "value2")
+          map += ("key2" → "value2")
         }
         throw new IllegalArgumentException
       }
@@ -36,10 +36,10 @@ class MapDbTest extends FlatSpec with Matchers {
     mapDb.close()
   }
 
-  it should "create index" in {
+  it should "create secondary key" in {
     val mapDb = MapDbFile(DBMaker.heapDB().make())
     val map = mapDb.hashMap[String, String]("test")
-    val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.heapTreeMap())
+    val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_index"))
 
     mapDb.withTransaction {
       map.put("key1", "value1")
@@ -49,6 +49,22 @@ class MapDbTest extends FlatSpec with Matchers {
     }
     index.get("value1".hashCode) shouldBe Some("key1")
     index.get("value2".hashCode) shouldBe Some("key2")
+    mapDb.close()
+  }
+
+  it should "create secondary value" in {
+    val mapDb = MapDbFile(DBMaker.heapDB().make())
+    val map = mapDb.hashMap[String, String]("test")
+    val index = MapDbIndex.secondaryValue[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_hashes"))
+
+    mapDb.withTransaction {
+      map.put("key1", "value1")
+      mapDb.withTransaction {
+        map.put("key2", "value2")
+      }
+    }
+    index.get("key1") shouldBe Some("value1".hashCode)
+    index.get("key2") shouldBe Some("value2".hashCode)
     mapDb.close()
   }
 }
