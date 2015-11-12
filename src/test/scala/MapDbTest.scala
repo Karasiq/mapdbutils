@@ -6,7 +6,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class MapDbTest extends FlatSpec with Matchers {
   "MapDB" should "commit" in {
-    val mapDb = MapDbFile(DBMaker.heapDB().make())
+    val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")
     mapDb.withTransaction {
       map.put("key1", "value1")
@@ -20,7 +20,7 @@ class MapDbTest extends FlatSpec with Matchers {
   }
 
   it should "rollback" in {
-    val mapDb = MapDbFile(DBMaker.heapDB().make())
+    val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")
     intercept[IllegalArgumentException] {
       mapDb.withTransaction {
@@ -37,7 +37,7 @@ class MapDbTest extends FlatSpec with Matchers {
   }
 
   it should "create secondary key" in {
-    val mapDb = MapDbFile(DBMaker.heapDB().make())
+    val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")
     val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_index"))
 
@@ -53,7 +53,7 @@ class MapDbTest extends FlatSpec with Matchers {
   }
 
   it should "create secondary value" in {
-    val mapDb = MapDbFile(DBMaker.heapDB().make())
+    val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")
     val index = MapDbIndex.secondaryValue[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_hashes"))
 

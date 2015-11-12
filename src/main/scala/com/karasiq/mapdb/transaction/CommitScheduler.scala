@@ -11,7 +11,7 @@ import org.mapdb.DB
 
 trait CommitSchedulerProvider { self: MapDbProvider ⇒
   @transient
-  lazy val commitScheduler: CommitScheduler = CommitScheduler(db)
+  final lazy val commitScheduler: CommitScheduler = CommitScheduler(db)
 }
 
 /**

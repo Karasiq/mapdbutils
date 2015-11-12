@@ -4,7 +4,7 @@ import java.io.Closeable
 import java.nio.file.{Files, Path}
 
 import com.karasiq.mapdb.MapDbWrapper.{MapDbHashMap, MapDbTreeMap}
-import com.karasiq.mapdb.transaction.{CommitSchedulerProvider, TransactionProvider}
+import com.karasiq.mapdb.transaction.{CommitSchedulerProvider, MapDbTransactionProvider}
 import org.mapdb.DBMaker.Maker
 import org.mapdb._
 
@@ -13,7 +13,7 @@ import scala.collection.concurrent.TrieMap
 /**
  * MapDB file wrapper
  */
-sealed abstract class MapDbFile extends MapDbProvider with TransactionProvider with CommitSchedulerProvider with Closeable {
+sealed abstract class MapDbFile extends MapDbProvider with MapDbTransactionProvider with CommitSchedulerProvider with Closeable {
   def path: Path
 
   override def toString: String = s"MapDbFile($path)"
@@ -56,7 +56,7 @@ object MapDbFile {
 /**
  * MapDB file wrapper factory
  */
-abstract class MapDbFileProducer {
+abstract class MapDbFileProducer extends Closeable {
   protected def setSettings(dbMaker: DBMaker.Maker): DBMaker.Maker
 
   private def createDb(f: Path): MapDbFile = {
@@ -79,9 +79,21 @@ abstract class MapDbFileProducer {
     close(f.toString)
   }
 
-  final def close(): Unit = synchronized {
+  override def close(): Unit = synchronized {
     dbMap.keys.foreach(close)
   }
+}
+
+abstract class MapDbSingleFileProducer(path: Path) extends Closeable {
+  assert(!Files.exists(path) || Files.isRegularFile(path), s"Not a file: $path")
+
+  protected def setSettings(dbMaker: DBMaker.Maker): DBMaker.Maker
+
+  private val producer = MapDbFileProducer(setSettings)
+
+  def apply(): MapDbFile = producer(path)
+
+  override def close(): Unit = producer.close()
 }
 
 

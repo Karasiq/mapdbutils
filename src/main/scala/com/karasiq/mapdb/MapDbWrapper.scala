@@ -33,18 +33,11 @@ sealed class MapDbWrappedMap[K, V, M <: java.util.Map[K, V]](mapDbMap: M) extend
   }
 
   override def get(key: K): Option[V] = {
-    if (mapDbMap.containsKey(key)) {
-      Some(mapDbMap.get(key))
-    } else {
-      None
-    }
+    Option(mapDbMap.get(key))
   }
 
   override def iterator: Iterator[(K, V)] = {
-    keysIterator.collect {
-      case key if mapDbMap.containsKey(key) ⇒
-        key → mapDbMap.get(key)
-    }
+    mapDbMap.toIterator
   }
 
   override def valuesIterator: Iterator[V] = {
