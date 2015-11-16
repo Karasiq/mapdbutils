@@ -3,7 +3,6 @@ package com.karasiq.mapdb
 import java.io.Closeable
 import java.nio.file.{Files, Path}
 
-import com.karasiq.mapdb.MapDbWrapper.{MapDbHashMap, MapDbTreeMap}
 import com.karasiq.mapdb.transaction.{CommitSchedulerProvider, MapDbTransactionProvider}
 import org.mapdb.DBMaker.Maker
 import org.mapdb._
@@ -33,15 +32,6 @@ sealed abstract class MapDbFile extends MapDbProvider with MapDbTransactionProvi
   override def close(): Unit = {
     commitScheduler.close()
     if (!db.isClosed) db.close()
-  }
-
-  // Shortcuts
-  def hashMap[K, V](name: String): MapDbHashMap[K, V] = {
-    MapDbWrapper(this).hashMap(name)
-  }
-
-  def treeMap[K, V](name: String): MapDbTreeMap[K, V] = {
-    MapDbWrapper(this).treeMap(name)
   }
 }
 

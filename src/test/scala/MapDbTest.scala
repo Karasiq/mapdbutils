@@ -1,8 +1,13 @@
 import com.karasiq.mapdb.MapDbFile
+import com.karasiq.mapdb.MapDbWrapper._
 import com.karasiq.mapdb.index.MapDbIndex
 import com.karasiq.mapdb.index.MapDbIndex.IndexMaps
+import com.karasiq.mapdb.serialization.MapDbSerializer
+import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
 import org.mapdb.DBMaker
 import org.scalatest.{FlatSpec, Matchers}
+
+case class TestCaseClass(str: String, int: Int)
 
 class MapDbTest extends FlatSpec with Matchers {
   "MapDB" should "commit" in {
@@ -21,7 +26,10 @@ class MapDbTest extends FlatSpec with Matchers {
 
   it should "rollback" in {
     val mapDb = MapDbFile(DBMaker.memoryDB().make())
-    val map = mapDb.hashMap[String, String]("test")
+    val map = mapDb.createHashMap[String, String]("test") { _
+      .keySerializer(MapDbSerializer[String])
+      .valueSerializer(MapDbSerializer[String])
+    }
     intercept[IllegalArgumentException] {
       mapDb.withTransaction {
         map += ("key1" → "value1")
@@ -66,5 +74,16 @@ class MapDbTest extends FlatSpec with Matchers {
     index.get("key1") shouldBe Some("value1".hashCode)
     index.get("key2") shouldBe Some("value2".hashCode)
     mapDb.close()
+  }
+
+  "Serializer" should "be implicitly created" in {
+    import MapDbSerializer.Default._
+
+    val serializer1 = MapDbSerializer[Long]
+    val serializer2 = MapDbSerializer[Array[Byte]]
+    val serializer3 = MapDbSerializer[TestCaseClass]
+    val serializer4 = MapDbSerializer[Vector[Int]]
+    val serializer5 = MapDbSerializer[Array[String]]
+    val serializer7 = MapDbSerializer[Map[Char, String]]
   }
 }

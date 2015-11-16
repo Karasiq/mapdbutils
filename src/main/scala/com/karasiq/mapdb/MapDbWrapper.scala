@@ -1,8 +1,10 @@
 package com.karasiq.mapdb
 
+import org.mapdb.DB.{BTreeMapMaker, HTreeMapMaker}
 import org.mapdb.{BTreeMap, DB, HTreeMap}
 
 import scala.collection.JavaConversions._
+import scala.language.implicitConversions
 
 object MapDbWrapper {
   type MapDbHashMap[K, V] = MapDbWrappedMap[K, V, HTreeMap[K, V]]
@@ -10,11 +12,11 @@ object MapDbWrapper {
   type MapDbHashSet[V] = MapDbWrappedSet[V, java.util.Set[V]]
   type MapDbTreeSet[V] = MapDbWrappedSet[V, java.util.NavigableSet[V]]
 
-  def apply(database: DB): MapDbWrapper = new MapDbWrapper {
+  implicit def apply(database: DB): MapDbWrapper = new MapDbWrapper {
     override protected def db: DB = database
   }
 
-  def apply(file: MapDbFile): MapDbWrapper = new MapDbWrapper {
+  implicit def apply(file: MapDbFile): MapDbWrapper = new MapDbWrapper {
     override protected def db: DB = file.db
   }
 }
@@ -90,12 +92,12 @@ sealed abstract class MapDbWrapper {
     new MapDbWrappedSet(mapDbSet)
   }
 
-  def createHashMap[K, V](createMap: DB ⇒ HTreeMap[K, V]): MapDbHashMap[K, V] = {
-    wrappedMap(createMap)
+  def createHashMap[K, V](name: String)(createMap: HTreeMapMaker ⇒ HTreeMapMaker): MapDbHashMap[K, V] = {
+    wrappedMap(db ⇒ createMap(db.hashMapCreate(name)).makeOrGet[K, V]())
   }
 
-  def createTreeMap[K, V](createMap: DB ⇒ BTreeMap[K, V]): MapDbTreeMap[K, V] = {
-    wrappedMap(createMap)
+  def createTreeMap[K, V](name: String)(createMap: BTreeMapMaker ⇒ BTreeMapMaker): MapDbTreeMap[K, V] = {
+    wrappedMap(db ⇒ createMap(db.treeMapCreate(name)).makeOrGet[K, V]())
   }
 
   def hashMap[K, V](name: String): MapDbHashMap[K, V] = {
