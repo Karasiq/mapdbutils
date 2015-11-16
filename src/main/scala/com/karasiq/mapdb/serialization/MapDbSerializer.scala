@@ -1,6 +1,7 @@
 package com.karasiq.mapdb.serialization
 
 import java.io.{DataInput, DataOutput}
+import java.time._
 
 import com.karasiq.mapdb.MapDbMacro
 import org.mapdb.{DataIO, Serializer}
@@ -72,6 +73,25 @@ object MapDbSerializer {
 
 
     // Custom
+    implicit def instantSerializer: Serializer[Instant] = new Serializer[Instant] {
+      override def serialize(out: DataOutput, value: Instant): Unit = {
+        DataIO.packLong(out, value.getEpochSecond)
+        DataIO.packInt(out, value.getNano)
+      }
+
+      override def deserialize(in: DataInput, available: Int): Instant = {
+        Instant.ofEpochSecond(DataIO.unpackLong(in), DataIO.unpackInt(in))
+      }
+    }
+
+    implicit def zonedDateTimeSerializer: Serializer[ZonedDateTime] = Serializer.JAVA.asInstanceOf[Serializer[ZonedDateTime]]
+
+    implicit def localDateTimeSerializer: Serializer[LocalDateTime] = Serializer.JAVA.asInstanceOf[Serializer[LocalDateTime]]
+
+    implicit def localDateSerializer: Serializer[LocalDate] = Serializer.JAVA.asInstanceOf[Serializer[LocalDate]]
+
+    implicit def localTimeSerializer: Serializer[LocalTime] = Serializer.JAVA.asInstanceOf[Serializer[LocalTime]]
+
     implicit def bigDecimalSerializer: Serializer[BigDecimal] = new Serializer[BigDecimal] {
       override def serialize(out: DataOutput, value: BigDecimal): Unit = {
         javaBigDecimalSerializer.serialize(out, value.underlying())
