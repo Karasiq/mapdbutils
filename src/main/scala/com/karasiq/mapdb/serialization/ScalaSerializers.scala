@@ -75,8 +75,8 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
       override def serialize(out: DataOutput, value: Map[K, V]): Unit = {
         DataIO.packInt(out, value.size)
         value.iterator.foreach { case (k, v) ⇒
-          orDefault[K].serialize(out, k)
-          orDefault[V].serialize(out, v)
+          implicitly[Serializer[K]].serialize(out, k)
+          implicitly[Serializer[V]].serialize(out, v)
         }
       }
 
@@ -84,7 +84,7 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
         val length = DataIO.unpackInt(in)
         assert(length >= 0)
         val entries = (0 until length).toIterator.map { _ ⇒
-          orDefault[K].deserialize(in, available) → orDefault[V].deserialize(in, available)
+          implicitly[Serializer[K]].deserialize(in, available) → implicitly[Serializer[V]].deserialize(in, available)
         }
         entries.toMap
       }

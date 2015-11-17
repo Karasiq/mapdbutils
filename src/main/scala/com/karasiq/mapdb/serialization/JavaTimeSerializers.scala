@@ -17,11 +17,11 @@ trait JavaTimeSerializers { self: PredefinedSerializers ⇒
     }
   }
 
-  implicit def zonedDateTimeSerializer: Serializer[ZonedDateTime] = serializableSerializer[ZonedDateTime]
+  implicit def zonedDateTimeSerializer: Serializer[ZonedDateTime] = javaObjectSerializer[ZonedDateTime]
 
-  implicit def localDateTimeSerializer: Serializer[LocalDateTime] = serializableSerializer[LocalDateTime]
+  implicit def localDateTimeSerializer: Serializer[LocalDateTime] = javaObjectSerializer[LocalDateTime]
 
-  implicit def localDateSerializer: Serializer[LocalDate] = serializableSerializer[LocalDate]
+  implicit def localDateSerializer: Serializer[LocalDate] = javaObjectSerializer[LocalDate]
 
-  implicit def localTimeSerializer: Serializer[LocalTime] = serializableSerializer[LocalTime]
+  implicit def localTimeSerializer: Serializer[LocalTime] = javaObjectSerializer[LocalTime]
 }

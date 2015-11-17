@@ -8,7 +8,7 @@ trait PredefinedSerializers {
     * @tparam T Object type
     * @return Serializer
     */
-  def serializableSerializer[T <: Serializable]: Serializer[T] = Serializer.JAVA.asInstanceOf[Serializer[T]]
+  def javaObjectSerializer[T]: Serializer[T] = Serializer.JAVA.asInstanceOf[Serializer[T]]
 
   // Primitives
   implicit def stringSerializer: Serializer[String] = Serializer.STRING_XXHASH

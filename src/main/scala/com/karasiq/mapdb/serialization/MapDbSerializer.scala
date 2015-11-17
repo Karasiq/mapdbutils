@@ -4,9 +4,9 @@ import org.mapdb.Serializer
 
 object MapDbSerializer {
   /**
-    * @see [[Default.serializableSerializer]]
+    * @see [[Default.javaObjectSerializer]]
     */
-  def java[T <: Serializable]: Serializer[T] = Default.serializableSerializer[T]
+  def java[T]: Serializer[T] = Default.javaObjectSerializer[T]
 
   def apply[T](implicit sr: Serializer[T]): Serializer[T] = {
     sr
