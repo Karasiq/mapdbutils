@@ -1,3 +1,5 @@
+import java.time.Instant
+
 import com.karasiq.mapdb.MapDbFile
 import com.karasiq.mapdb.MapDbWrapper._
 import com.karasiq.mapdb.index.MapDbIndex
@@ -7,7 +9,7 @@ import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
 import org.mapdb.DBMaker
 import org.scalatest.{FlatSpec, Matchers}
 
-case class TestCaseClass(str: String, int: Int)
+case class TestCaseClass(str: String, int: Int, times: Seq[Instant])
 
 class MapDbTest extends FlatSpec with Matchers {
   "MapDB" should "commit" in {
