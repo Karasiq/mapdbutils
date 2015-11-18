@@ -2,12 +2,15 @@ package com.karasiq.mapdb.serialization
 
 import org.mapdb.Serializer
 
+import scala.annotation.implicitNotFound
+
 object MapDbSerializer {
   /**
     * @see [[Default.javaObjectSerializer]]
     */
   def java[T]: Serializer[T] = Default.javaObjectSerializer[T]
 
+  @implicitNotFound("Serializer not found for type ${T}")
   def apply[T](implicit sr: Serializer[T]): Serializer[T] = {
     sr
   }

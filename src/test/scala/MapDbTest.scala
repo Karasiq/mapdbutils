@@ -15,9 +15,9 @@ class MapDbTest extends FlatSpec with Matchers {
   "MapDB" should "commit" in {
     val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")
-    mapDb.withTransaction {
+    mapDb.withTransaction { implicit tx ⇒
       map.put("key1", "value1")
-      mapDb.withTransaction {
+      mapDb.withTransaction { implicit tx ⇒
         map.put("key2", "value2")
       }
     }
@@ -33,9 +33,9 @@ class MapDbTest extends FlatSpec with Matchers {
       .valueSerializer(MapDbSerializer[String])
     }
     intercept[IllegalArgumentException] {
-      mapDb.withTransaction {
+      mapDb.withTransaction { implicit tx ⇒
         map += ("key1" → "value1")
-        mapDb.withTransaction {
+        mapDb.withTransaction { implicit tx ⇒
           map += ("key2" → "value2")
         }
         throw new IllegalArgumentException
@@ -51,9 +51,9 @@ class MapDbTest extends FlatSpec with Matchers {
     val map = mapDb.hashMap[String, String]("test")
     val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_index"))
 
-    mapDb.withTransaction {
+    mapDb.withTransaction { implicit tx ⇒
       map.put("key1", "value1")
-      mapDb.withTransaction {
+      mapDb.withTransaction { implicit tx ⇒
         map.put("key2", "value2")
       }
     }
@@ -67,9 +67,9 @@ class MapDbTest extends FlatSpec with Matchers {
     val map = mapDb.hashMap[String, String]("test")
     val index = MapDbIndex.secondaryValue[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_hashes"))
 
-    mapDb.withTransaction {
+    mapDb.withTransaction { implicit tx ⇒
       map.put("key1", "value1")
-      mapDb.withTransaction {
+      mapDb.withTransaction { implicit tx ⇒
         map.put("key2", "value2")
       }
     }

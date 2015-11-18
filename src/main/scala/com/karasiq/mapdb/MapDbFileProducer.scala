@@ -2,8 +2,9 @@ package com.karasiq.mapdb
 
 import java.io.Closeable
 import java.nio.file.{Files, Path}
+import java.util.concurrent.TimeUnit
 
-import com.karasiq.mapdb.transaction.{CommitSchedulerProvider, MapDbTransactionProvider}
+import com.karasiq.mapdb.transaction.TransactionScheduler
 import org.mapdb.DBMaker.Maker
 import org.mapdb._
 
@@ -12,7 +13,7 @@ import scala.collection.concurrent.TrieMap
 /**
  * MapDB file wrapper
  */
-sealed abstract class MapDbFile extends MapDbProvider with MapDbTransactionProvider with CommitSchedulerProvider with Closeable {
+sealed abstract class MapDbFile extends MapDbProvider with TransactionScheduler with Closeable {
   def path: Path
 
   override def toString: String = s"MapDbFile($path)"
@@ -30,7 +31,8 @@ sealed abstract class MapDbFile extends MapDbProvider with MapDbTransactionProvi
   }
 
   override def close(): Unit = {
-    commitScheduler.close()
+    txSchedulerExecutionContext.shutdown()
+    txSchedulerExecutionContext.awaitTermination(5, TimeUnit.MINUTES)
     if (!db.isClosed) db.close()
   }
 }
