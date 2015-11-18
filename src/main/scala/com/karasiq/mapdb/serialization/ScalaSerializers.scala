@@ -4,6 +4,7 @@ import java.io.{DataInput, DataOutput}
 
 import org.mapdb.{DataIO, Serializer}
 
+import scala.collection.mutable.ListBuffer
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 
@@ -28,7 +29,7 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
     }
   }
 
-  private def collectionSerializer[T : Serializer, C[`T`] <: Traversable[T]](f: Iterator[T] ⇒ C[T]): Serializer[C[T]] = new Serializer[C[T]] {
+  private def collectionSerializer[T : Serializer, C[`T`] <: Traversable[T]](f: (Int, Iterator[T]) ⇒ C[T]): Serializer[C[T]] = new Serializer[C[T]] {
     override def serialize(out: DataOutput, value: C[T]): Unit = {
       require(value.hasDefiniteSize, "Undefined size")
       DataIO.packInt(out, value.size)
@@ -37,8 +38,9 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
 
     override def deserialize(in: DataInput, available: Int): C[T] = {
       val length = DataIO.unpackInt(in)
+      assert(length >= 0, "Negative length")
       val buffer = (0 until length).toIterator.map(_ ⇒ implicitly[Serializer[T]].deserialize(in, available))
-      f(buffer)
+      f(length, buffer)
     }
   }
 
@@ -60,15 +62,34 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
     }
   }
 
-  implicit def seqSerializer[T: Serializer]: Serializer[Seq[T]] = collectionSerializer(_.toSeq)
+  @inline
+  private def createVector[T](length: Int, iterator: Iterator[T]): Vector[T] = {
+    val buffer = Vector.newBuilder[T]
+    buffer.sizeHint(length)
+    iterator.foreach { value ⇒
+      buffer += value
+    }
+    buffer.result()
+  }
 
-  implicit def vectorSerializer[T: Serializer]: Serializer[Vector[T]] = collectionSerializer(_.toVector)
+  private def createList[T](length: Int, iterator: Iterator[T]): List[T] = {
+    val buffer = new ListBuffer[T]()
+    buffer.sizeHint(length)
+    iterator.foreach { value ⇒
+      buffer += value
+    }
+    buffer.result()
+  }
 
-  implicit def listSerializer[T: Serializer]: Serializer[List[T]] = collectionSerializer(_.toList)
+  implicit def seqSerializer[T: Serializer]: Serializer[Seq[T]] = collectionSerializer(createList)
 
-  implicit def iterableSerializer[T: Serializer]: Serializer[Iterable[T]] = collectionSerializer(_.toIterable)
+  implicit def vectorSerializer[T: Serializer]: Serializer[Vector[T]] = collectionSerializer(createVector)
 
-  implicit def traversableSerializer[T: Serializer]: Serializer[Traversable[T]] = collectionSerializer(_.toTraversable)
+  implicit def listSerializer[T: Serializer]: Serializer[List[T]] = collectionSerializer(createList)
+
+  implicit def iterableSerializer[T: Serializer]: Serializer[Iterable[T]] = collectionSerializer(createList)
+
+  implicit def traversableSerializer[T: Serializer]: Serializer[Traversable[T]] = collectionSerializer(createList)
 
   implicit def mapSerializer[K : Serializer, V : Serializer]: Serializer[Map[K, V]] = {
     new Serializer[Map[K, V]] {
@@ -82,7 +103,7 @@ trait ScalaSerializers { self: PredefinedSerializers ⇒
 
       override def deserialize(in: DataInput, available: Int): Map[K, V] = {
         val length = DataIO.unpackInt(in)
-        assert(length >= 0)
+        assert(length >= 0, "Negative length")
         val entries = (0 until length).toIterator.map { _ ⇒
           implicitly[Serializer[K]].deserialize(in, available) → implicitly[Serializer[V]].deserialize(in, available)
         }
