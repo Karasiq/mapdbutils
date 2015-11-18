@@ -37,6 +37,8 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     }
   }
 
+  def newTransaction: TransactionContextHolder = NoTransaction
+
   /**
     * Performs asynchronous transaction
     * @param tx Transaction body
@@ -44,7 +46,7 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     * @tparam T Result type
     * @return Future
     */
-  final def scheduleTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = NoTransaction): Future[T] = {
+  final def scheduleTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = newTransaction): Future[T] = {
     ctx.doInTransaction[T](tx)
   }
 
@@ -55,7 +57,7 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     * @tparam T Result type
     * @return Transaction result
     */
-  final def withTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = NoTransaction): T = {
+  final def withTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = newTransaction): T = {
     val future = scheduleTransaction(tx)(ctx)
     Await.result(future, Duration.Inf)
   }
