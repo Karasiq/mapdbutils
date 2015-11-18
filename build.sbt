@@ -48,7 +48,7 @@ val rootSettings = Seq(
 val macroSettings = Seq(
   name := "mapdbutils-macro",
   libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % "2.11.7"
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value
   )
 )
 
