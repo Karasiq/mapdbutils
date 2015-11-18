@@ -7,4 +7,5 @@ import scala.language.experimental.macros
 
 trait MacroSerializers {
   implicit def materializeSerializer[T]: Serializer[T] = macro MapDbMacro.materializeSerializerImpl[T]
+  implicit def tupleSerializer[T]: Serializer[T] = macro MapDbMacro.tupleSerializerImpl[T]
 }
