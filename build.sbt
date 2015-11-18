@@ -8,7 +8,7 @@ val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.mapdb" % "mapdb" % "2.0-beta8" % "provided"
   ),
-  scalacOptions ++= Seq("-Xlog-implicits")
+  scalacOptions ++= Seq("-Xlog-implicits", "-Ymacro-debug-lite")
 )
 
 val rootSettings = Seq(
