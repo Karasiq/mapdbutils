@@ -6,8 +6,10 @@ import com.karasiq.mapdb.index.MapDbIndex
 import com.karasiq.mapdb.index.MapDbIndex.IndexMaps
 import com.karasiq.mapdb.serialization.MapDbSerializer
 import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
-import org.mapdb.DBMaker
+import eu.timepit.refined.numeric.Positive
+import org.mapdb.{DBMaker, Serializer}
 import org.scalatest.{FlatSpec, Matchers}
+import shapeless.tag.@@
 
 case class TestCaseClass(str: String, int: Int, times: Seq[Instant])
 
@@ -81,8 +83,9 @@ class MapDbTest extends FlatSpec with Matchers {
   "Serializer" should "be implicitly created" in {
     import MapDbSerializer.Default._
 
-    val serializer1 = MapDbSerializer[Long]
-    val serializer2 = MapDbSerializer[Array[Byte]]
+    assert(MapDbSerializer[Long].eq(Serializer.LONG.asInstanceOf[Serializer[Long]]))
+    assert(MapDbSerializer[Long @@ Positive].eq(Serializer.LONG_PACKED.asInstanceOf[Serializer[Long]]))
+    assert(MapDbSerializer[Array[Byte]].eq(Serializer.BYTE_ARRAY))
     val serializer3 = MapDbSerializer[TestCaseClass]
     val serializer4 = MapDbSerializer[Vector[Int]]
     val serializer5 = MapDbSerializer[Array[String]]

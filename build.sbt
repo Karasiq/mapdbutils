@@ -15,6 +15,7 @@ val rootSettings = Seq(
   name := "mapdbutils",
   libraryDependencies ++= Seq(
     "com.typesafe" % "config" % "1.3.0",
+    "eu.timepit" %% "refined" % "0.3.1",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test"
   ),
   publishMavenStyle := true,

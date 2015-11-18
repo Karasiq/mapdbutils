@@ -22,5 +22,5 @@ object MapDbSerializer {
   /**
    * Default implicit serializers container
    */
-  object Default extends PredefinedSerializers with JavaTimeSerializers with ScalaSerializers with MacroSerializers
+  object Default extends PredefinedSerializers with JavaTimeSerializers with ScalaSerializers with MacroSerializers with RefinedSerializers
 }
