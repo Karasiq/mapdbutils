@@ -13,10 +13,6 @@ object MapDbMacro {
         c.abort(c.enclosingPosition, s"No method found: $fname")
       }
 
-      if (!tpe.decl(fname).typeSignature.<:<(ftype)) {
-        c.abort(c.enclosingPosition, s"Type not match: $fname $ftype")
-      }
-
       val serializer = q"implicitly[$serializerType[$ftype]]"
       (q"$serializer.serialize(out, value.$fname)", q"$serializer.deserialize(in, available)")
     }.unzip
