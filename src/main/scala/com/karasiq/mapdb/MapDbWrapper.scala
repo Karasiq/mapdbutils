@@ -38,6 +38,10 @@ sealed class MapDbWrappedMap[K, V, M <: java.util.Map[K, V]](mapDbMap: M) extend
     Option(mapDbMap.get(key))
   }
 
+  override def contains(key: K): Boolean = {
+    mapDbMap.containsKey(key)
+  }
+
   override def iterator: Iterator[(K, V)] = {
     mapDbMap.toIterator
   }
