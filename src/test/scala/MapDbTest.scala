@@ -91,5 +91,6 @@ class MapDbTest extends FlatSpec with Matchers {
     val serializer5 = MapDbSerializer[Array[String]]
     val serializer7 = MapDbSerializer[Map[Char, String]]
     val serializer8 = MapDbSerializer[(String, Long)]
+    val serializer9 = MapDbSerializer[Set[Array[String]]]
   }
 }
