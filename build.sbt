@@ -8,16 +8,7 @@ val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.mapdb" % "mapdb" % "2.0-beta8" % "provided"
   ),
-  scalacOptions ++= Seq("-Xlog-implicits", "-Ymacro-debug-lite")
-)
-
-val rootSettings = Seq(
-  name := "mapdbutils",
-  libraryDependencies ++= Seq(
-    "com.typesafe" % "config" % "1.3.0",
-    "eu.timepit" %% "refined" % "0.3.1",
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test"
-  ),
+  scalacOptions ++= Seq("-Xlog-implicits", "-Ymacro-debug-lite"),
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -29,12 +20,10 @@ val rootSettings = Seq(
   publishArtifact in Test := false,
   pomIncludeRepository := { _ ⇒ false },
   licenses := Seq("The MIT License" → url("http://opensource.org/licenses/MIT")),
-  homepage := Some(url("https://github.com/Karasiq/" + name.value)),
+  homepage := Some(url("https://github.com/Karasiq/mapdbutils")),
   pomExtra := <scm>
-    <url>git@github.com:Karasiq/{name.value}.git</url>
-    <connection>scm:git:git@github.com:Karasiq/
-      {name.value}
-      .git</connection>
+    <url>git@github.com:Karasiq/mapdbutils.git</url>
+    <connection>scm:git:git@github.com:Karasiq/mapdbutils.git</connection>
   </scm>
     <developers>
       <developer>
@@ -45,6 +34,15 @@ val rootSettings = Seq(
     </developers>
 )
 
+val rootSettings = Seq(
+  name := "mapdbutils",
+  libraryDependencies ++= Seq(
+    "com.typesafe" % "config" % "1.3.0",
+    "eu.timepit" %% "refined" % "0.3.1",
+    "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  )
+)
+
 val macroSettings = Seq(
   name := "mapdbutils-macro",
   libraryDependencies ++= Seq(
@@ -53,11 +51,9 @@ val macroSettings = Seq(
 )
 
 lazy val macros = Project("mapdbutils-macro", new File("macro"))
-  .settings(commonSettings)
-  .settings(macroSettings)
+  .settings(commonSettings, macroSettings)
 
 lazy val root = Project("mapdbutils", new File("."))
   .aggregate(macros)
   .dependsOn(macros)
-  .settings(commonSettings)
-  .settings(rootSettings)
+  .settings(commonSettings, rootSettings)
