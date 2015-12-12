@@ -11,12 +11,12 @@ import scala.util.Try
 trait TransactionScheduler { self: MapDbProvider ⇒
   protected final val txSchedulerExecutionContext = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
 
-  private object NoTransaction extends TransactionContextHolder {
-    override def doInTransaction[T](tx: TransactionContextHolder ⇒ T): Future[T] = {
+  private object NoTransaction extends TxCtx {
+    override def doInTransaction[T](tx: TxCtx ⇒ T): Future[T] = {
       implicit def context: ExecutionContext = TransactionScheduler.this.txSchedulerExecutionContext
 
-      val newContext = new TransactionContextHolder {
-        override def doInTransaction[T1](tx: (TransactionContextHolder) ⇒ T1): Future[T1] = {
+      val newContext = new TxCtx {
+        override def doInTransaction[T1](tx: (TxCtx) ⇒ T1): Future[T1] = {
           Future.fromTry(Try(tx(this)))
         }
       }
@@ -37,7 +37,7 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     }
   }
 
-  def newTransaction: TransactionContextHolder = NoTransaction
+  def newTransaction: TxCtx = NoTransaction
 
   /**
     * Performs asynchronous transaction
@@ -46,7 +46,7 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     * @tparam T Result type
     * @return Future
     */
-  final def scheduleTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = newTransaction): Future[T] = {
+  final def scheduleTransaction[T](tx: TxCtx ⇒ T)(implicit ctx: TxCtx = newTransaction): Future[T] = {
     ctx.doInTransaction[T](tx)
   }
 
@@ -57,7 +57,7 @@ trait TransactionScheduler { self: MapDbProvider ⇒
     * @tparam T Result type
     * @return Transaction result
     */
-  final def withTransaction[T](tx: TransactionContextHolder ⇒ T)(implicit ctx: TransactionContextHolder = newTransaction): T = {
+  final def withTransaction[T](tx: TxCtx ⇒ T)(implicit ctx: TxCtx = newTransaction): T = {
     val future = scheduleTransaction(tx)(ctx)
     Await.result(future, Duration.Inf)
   }

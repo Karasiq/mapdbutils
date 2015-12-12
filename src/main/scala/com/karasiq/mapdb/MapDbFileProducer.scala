@@ -39,9 +39,9 @@ sealed abstract class MapDbFile extends MapDbProvider with TransactionScheduler 
 
 object MapDbFile {
   def apply(database: DB, dbPath: Path = null): MapDbFile = new MapDbFile {
-    override def db: DB = database
+    override val db: DB = database
 
-    override def path: Path = dbPath
+    override val path: Path = dbPath
   }
 }
 

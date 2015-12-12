@@ -2,11 +2,11 @@ import sbt.Keys._
 
 val commonSettings = Seq(
   organization := "com.github.karasiq",
-  version := "1.1-SNAPSHOT",
-  isSnapshot := true,
+  version := "1.1.0",
+  isSnapshot := false,
   scalaVersion := "2.11.7",
   libraryDependencies ++= Seq(
-    "org.mapdb" % "mapdb" % "2.0-beta8" % "provided"
+    "org.mapdb" % "mapdb" % "2.0-beta12" % "provided"
   ),
   scalacOptions ++= Seq("-Xlog-implicits", "-Ymacro-debug-lite"),
   publishMavenStyle := true,

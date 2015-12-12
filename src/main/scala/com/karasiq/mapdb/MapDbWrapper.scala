@@ -5,6 +5,7 @@ import org.mapdb.{BTreeMap, DB, HTreeMap}
 
 import scala.collection.JavaConversions._
 import scala.language.implicitConversions
+import scala.util.Try
 
 object MapDbWrapper {
   type MapDbHashMap[K, V] = MapDbWrappedMap[K, V, HTreeMap[K, V]]
@@ -35,11 +36,14 @@ sealed class MapDbWrappedMap[K, V, M <: java.util.Map[K, V]](mapDbMap: M) extend
   }
 
   override def get(key: K): Option[V] = {
-    Option(mapDbMap.get(key))
+    Try(mapDbMap.get(key))
+      .filter(_ != null)
+      .toOption
   }
 
   override def contains(key: K): Boolean = {
-    mapDbMap.containsKey(key)
+    Try(mapDbMap.containsKey(key))
+      .getOrElse(false)
   }
 
   override def iterator: Iterator[(K, V)] = {
@@ -73,7 +77,8 @@ sealed class MapDbWrappedSet[V, S <: java.util.Set[V]](mapDbSet: S) extends scal
   }
 
   override def contains(elem: V): Boolean = {
-    mapDbSet.contains(elem)
+    Try(mapDbSet.contains(elem))
+      .getOrElse(false)
   }
 
   override def iterator: Iterator[V] = {
