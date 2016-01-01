@@ -48,6 +48,19 @@ class MapDbTest extends FlatSpec with Matchers {
     mapDb.close()
   }
 
+  it should "create hash set" in {
+    val mapDb = MapDbFile(DBMaker.memoryDB().make())
+    val set = mapDb.createHashSet[String]("test")(_
+      .serializer(MapDbSerializer[String])
+    )
+
+    mapDb.withTransaction { implicit tx ⇒
+      set += "test value"
+    }
+
+    set should contain ("test value")
+  }
+
   it should "create secondary key" in {
     val mapDb = MapDbFile(DBMaker.memoryDB().make())
     val map = mapDb.hashMap[String, String]("test")

@@ -117,12 +117,12 @@ sealed abstract class MapDbWrapper {
     wrappedMap(_.treeMap(name))
   }
 
-  def createTreeSet[V](createSet: DB ⇒ java.util.NavigableSet[V]): MapDbTreeSet[V] = {
-    wrappedSet(createSet)
+  def createTreeSet[V](name: String)(createSet: DB#BTreeSetMaker ⇒ DB#BTreeSetMaker): MapDbTreeSet[V] = {
+    wrappedSet(db ⇒ createSet(db.treeSetCreate(name)).makeOrGet[V]())
   }
 
-  def createHashSet[V](createSet: DB ⇒ java.util.Set[V]): MapDbHashSet[V] = {
-    wrappedSet(createSet)
+  def createHashSet[V](name: String)(createSet: DB#HTreeSetMaker ⇒ DB#HTreeSetMaker): MapDbHashSet[V] = {
+    wrappedSet(db ⇒ createSet(db.hashSetCreate(name)).makeOrGet[V]())
   }
 
   def treeSet[V](name: String): MapDbTreeSet[V] = {
