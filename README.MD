@@ -6,7 +6,7 @@ Scala wrappers for MapDB
 In your `build.sbt`:
 ```scala
 libraryDependencies ++= Seq(
-  "com.github.karasiq" %% "mapdbutils" % "1.1.0",
+  "com.github.karasiq" %% "mapdbutils" % "1.1.1",
   "org.mapdb" % "mapdb" % "2.0-beta12"
 )
 ```
