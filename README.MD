@@ -1,7 +1,5 @@
-# About
+# mapdbutils [![Build Status](https://travis-ci.org/Karasiq/mapdbutils.svg?branch=master)](https://travis-ci.org/Karasiq/mapdbutils)
 Scala wrappers for MapDB
-
-[![Build Status](https://travis-ci.org/Karasiq/mapdbutils.svg?branch=master)](https://travis-ci.org/Karasiq/mapdbutils)
 
 # How to use
 ## SBT configuration
