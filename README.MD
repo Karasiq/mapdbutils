@@ -1,4 +1,4 @@
-# mapdbutils [![Build Status](https://travis-ci.org/Karasiq/mapdbutils.svg?branch=master)](https://travis-ci.org/Karasiq/mapdbutils)
+# mapdbutils [![Build Status](https://travis-ci.org/Karasiq/mapdbutils.svg?branch=master)](https://travis-ci.org/Karasiq/mapdbutils) [![Dependencies](https://app.updateimpact.com/badge/692686982173822976/mapdbutils.svg?config=compile)](https://app.updateimpact.com/latest/692686982173822976/mapdbutils)
 Scala wrappers for MapDB
 
 # How to use
