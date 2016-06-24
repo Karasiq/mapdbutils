@@ -1,27 +1,27 @@
 package com.karasiq.mapdb.serialization
 
-import java.io.{DataInput, DataOutput}
 import java.time._
 
-import org.mapdb.{DataIO, Serializer}
+import org.mapdb.serializer.{GroupSerializer, GroupSerializerObjectArray}
+import org.mapdb.{DataInput2, DataOutput2}
 
 trait JavaTimeSerializers { self: PredefinedSerializers ⇒
-  implicit def instantSerializer: Serializer[Instant] = new Serializer[Instant] {
-    override def serialize(out: DataOutput, value: Instant): Unit = {
-      DataIO.packLong(out, value.getEpochSecond)
-      DataIO.packInt(out, value.getNano)
+  implicit def instantSerializer: GroupSerializer[Instant] = new GroupSerializerObjectArray[Instant] {
+    override def serialize(out: DataOutput2, value: Instant): Unit = {
+      out.packLong(value.getEpochSecond)
+      out.packInt(value.getNano)
     }
 
-    override def deserialize(in: DataInput, available: Int): Instant = {
-      Instant.ofEpochSecond(DataIO.unpackLong(in), DataIO.unpackInt(in))
+    override def deserialize(in: DataInput2, available: Int): Instant = {
+      Instant.ofEpochSecond(in.unpackLong(), in.unpackInt())
     }
   }
 
-  implicit def zonedDateTimeSerializer: Serializer[ZonedDateTime] = javaObjectSerializer[ZonedDateTime]
+  implicit def zonedDateTimeSerializer: GroupSerializer[ZonedDateTime] = javaObjectSerializer[ZonedDateTime]
 
-  implicit def localDateTimeSerializer: Serializer[LocalDateTime] = javaObjectSerializer[LocalDateTime]
+  implicit def localDateTimeSerializer: GroupSerializer[LocalDateTime] = javaObjectSerializer[LocalDateTime]
 
-  implicit def localDateSerializer: Serializer[LocalDate] = javaObjectSerializer[LocalDate]
+  implicit def localDateSerializer: GroupSerializer[LocalDate] = javaObjectSerializer[LocalDate]
 
-  implicit def localTimeSerializer: Serializer[LocalTime] = javaObjectSerializer[LocalTime]
+  implicit def localTimeSerializer: GroupSerializer[LocalTime] = javaObjectSerializer[LocalTime]
 }

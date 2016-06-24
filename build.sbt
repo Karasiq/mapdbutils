@@ -2,13 +2,12 @@ import sbt.Keys._
 
 val commonSettings = Seq(
   organization := "com.github.karasiq",
-  version := "1.1.1",
-  isSnapshot := false,
-  scalaVersion := "2.11.7",
+  version := "1.2.0-SNAPSHOT",
+  isSnapshot := version.value.endsWith("SNAPSHOT"),
+  scalaVersion := "2.11.8",
   libraryDependencies ++= Seq(
-    "org.mapdb" % "mapdb" % "2.0-beta12" % "provided"
+    "org.mapdb" % "mapdb" % "3.0.0-RC2" % "provided"
   ),
-  scalacOptions ++= Seq("-Xlog-implicits", "-Ymacro-debug-lite"),
   publishMavenStyle := true,
   publishTo := {
     val nexus = "https://oss.sonatype.org/"

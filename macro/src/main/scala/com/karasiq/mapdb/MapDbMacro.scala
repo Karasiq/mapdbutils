@@ -1,12 +1,13 @@
 package com.karasiq.mapdb
 
-import org.mapdb.Serializer
+import org.mapdb.serializer.GroupSerializer
 
 object MapDbMacro {
-  private def compileSerializer[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context)(tpe: c.universe.Type, fields: List[(c.universe.TermName, c.universe.Type)]): c.Expr[Serializer[T]] = {
+  private def compileSerializer[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context)(tpe: c.universe.Type, fields: List[(c.universe.TermName, c.universe.Type)]): c.Expr[GroupSerializer[T]] = {
     import c.universe._
 
     val serializerType = tq"_root_.org.mapdb.Serializer"
+    val groupSerializerType = tq"_root_.org.mapdb.serializer.GroupSerializerObjectArray"
 
     val (serialize, deserialize) = fields.map { case (fname, ftype) ⇒
       if (!tpe.decl(fname).isMethod || !tpe.decl(fname).isPublic) {
@@ -17,15 +18,15 @@ object MapDbMacro {
       (q"$serializer.serialize(out, value.$fname)", q"$serializer.deserialize(in, available)")
     }.unzip
 
-    c.Expr[Serializer[T]] { q"""
-        new $serializerType[$tpe] {
-          override def serialize(out: java.io.DataOutput, value: $tpe): Unit = { ..$serialize }
-          override def deserialize(in: java.io.DataInput, available: Int): $tpe = new $tpe(..$deserialize)
+    c.Expr[GroupSerializer[T]] { q"""
+        new $groupSerializerType[$tpe] {
+          override def serialize(out: _root_.org.mapdb.DataOutput2, value: $tpe): Unit = { ..$serialize }
+          override def deserialize(in: _root_.org.mapdb.DataInput2, available: Int): $tpe = new $tpe(..$deserialize)
         }
       """ }
   }
 
-  def tupleSerializerImpl[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context): c.Expr[Serializer[T]] = {
+  def tupleSerializerImpl[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context): c.Expr[GroupSerializer[T]] = {
     import c.universe._
 
     val tpe = weakTypeOf[T]
@@ -39,10 +40,10 @@ object MapDbMacro {
       c.abort(c.enclosingPosition, "Not a tuple")
     }
 
-    compileSerializer(c)(tpe, fields.get.map(_.asTerm.name).zip(types)).asInstanceOf[c.Expr[Serializer[T]]]
+    compileSerializer(c)(tpe, fields.get.map(_.asTerm.name).zip(types)).asInstanceOf[c.Expr[GroupSerializer[T]]]
   }
 
-  def materializeSerializerImpl[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context): c.Expr[Serializer[T]] = {
+  def materializeSerializerImpl[T: c.WeakTypeTag](c: scala.reflect.macros.whitebox.Context): c.Expr[GroupSerializer[T]] = {
     import c.universe._
 
     val tpe = weakTypeOf[T]
@@ -55,6 +56,6 @@ object MapDbMacro {
       c.abort(c.enclosingPosition, "Object contains no fields")
     }
 
-    compileSerializer[T](c)(tpe, fields.get.map(f ⇒ f.asTerm.name → f.typeSignature)).asInstanceOf[c.Expr[Serializer[T]]]
+    compileSerializer[T](c)(tpe, fields.get.map(f ⇒ f.asTerm.name → f.typeSignature)).asInstanceOf[c.Expr[GroupSerializer[T]]]
   }
 }

@@ -1,56 +1,44 @@
 package com.karasiq.mapdb.serialization
 
 import org.mapdb.Serializer
+import org.mapdb.serializer.GroupSerializer
 
 trait PredefinedSerializers {
   /**
-    * Standard Java Serialization wrapper
+    * Serializer which uses standard Java Serialization with [[java.io.ObjectInputStream]] and [[java.io.ObjectOutputStream]]
     * @tparam T Object type
     * @return Serializer
     */
-  def javaObjectSerializer[T]: Serializer[T] = Serializer.JAVA.asInstanceOf[Serializer[T]]
+  def javaObjectSerializer[T]: GroupSerializer[T] = Serializer.JAVA.asInstanceOf[GroupSerializer[T]]
+
+  /**
+    * elsa - Java serialization, faster and space efficient version of ObjectOutputStream
+    * @tparam T Object type
+    * @return Serializer
+    */
+  def elsaSerializer[T]: GroupSerializer[T] = Serializer.ELSA.asInstanceOf[GroupSerializer[T]]
 
   // Primitives
-  implicit def stringSerializer: Serializer[String] = Serializer.STRING_XXHASH
-
-  implicit def intSerializer: Serializer[Int] = Serializer.INTEGER.asInstanceOf[Serializer[Int]]
-
-  implicit def longSerializer: Serializer[Long] = Serializer.LONG.asInstanceOf[Serializer[Long]]
-
-  implicit def shortSerializer: Serializer[Short] = Serializer.SHORT.asInstanceOf[Serializer[Short]]
-
-  implicit def byteSerializer: Serializer[Byte] = Serializer.BYTE.asInstanceOf[Serializer[Byte]]
-
-  implicit def charSerializer: Serializer[Char] = Serializer.CHAR.asInstanceOf[Serializer[Char]]
-
-  implicit def doubleSerializer: Serializer[Double] = Serializer.DOUBLE.asInstanceOf[Serializer[Double]]
-
-  implicit def floatSerializer: Serializer[Float] = Serializer.FLOAT.asInstanceOf[Serializer[Float]]
-
-  implicit def booleanSerializer: Serializer[Boolean] = Serializer.BOOLEAN.asInstanceOf[Serializer[Boolean]]
-
-  implicit def javaUuidSerializer: Serializer[java.util.UUID] = Serializer.UUID
-
-  implicit def javaBigIntegerSerializer: Serializer[java.math.BigInteger] = Serializer.BIG_INTEGER
-
-  implicit def javaBigDecimalSerializer: Serializer[java.math.BigDecimal] = Serializer.BIG_DECIMAL
-
-  implicit def javaDateSerializer: Serializer[java.util.Date] = Serializer.DATE
+  implicit def stringSerializer: GroupSerializer[String] = Serializer.STRING_DELTA
+  implicit def intSerializer: GroupSerializer[Int] = Serializer.INTEGER_DELTA.asInstanceOf[GroupSerializer[Int]]
+  implicit def longSerializer: GroupSerializer[Long] = Serializer.LONG_DELTA.asInstanceOf[GroupSerializer[Long]]
+  implicit def shortSerializer: GroupSerializer[Short] = Serializer.SHORT.asInstanceOf[GroupSerializer[Short]]
+  implicit def byteSerializer: GroupSerializer[Byte] = Serializer.BYTE.asInstanceOf[GroupSerializer[Byte]]
+  implicit def charSerializer: GroupSerializer[Char] = Serializer.CHAR.asInstanceOf[GroupSerializer[Char]]
+  implicit def doubleSerializer: GroupSerializer[Double] = Serializer.DOUBLE.asInstanceOf[GroupSerializer[Double]]
+  implicit def floatSerializer: GroupSerializer[Float] = Serializer.FLOAT.asInstanceOf[GroupSerializer[Float]]
+  implicit def booleanSerializer: GroupSerializer[Boolean] = Serializer.BOOLEAN.asInstanceOf[GroupSerializer[Boolean]]
+  implicit def javaUuidSerializer: GroupSerializer[java.util.UUID] = Serializer.UUID
+  implicit def javaBigIntegerSerializer: GroupSerializer[java.math.BigInteger] = Serializer.BIG_INTEGER
+  implicit def javaBigDecimalSerializer: GroupSerializer[java.math.BigDecimal] = Serializer.BIG_DECIMAL
+  implicit def javaDateSerializer: GroupSerializer[java.util.Date] = Serializer.DATE
 
   // Arrays
-  implicit def intArraySerializer: Serializer[Array[Int]] = Serializer.INT_ARRAY
-
-  implicit def longArraySerializer: Serializer[Array[Long]] = Serializer.LONG_ARRAY
-
-  implicit def shortArraySerializer: Serializer[Array[Short]] = Serializer.SHORT_ARRAY
-
-  implicit def byteArraySerializer: Serializer[Array[Byte]] = Serializer.BYTE_ARRAY
-
-  implicit def charArraySerializer: Serializer[Array[Char]] = Serializer.CHAR_ARRAY
-
-  implicit def doubleArraySerializer: Serializer[Array[Double]] = Serializer.DOUBLE_ARRAY
-
-  implicit def floatArraySerializer: Serializer[Array[Float]] = Serializer.FLOAT_ARRAY
-
-  implicit def booleanArraySerializer: Serializer[Array[Boolean]] = Serializer.BOOLEAN_ARRAY
+  implicit def intArraySerializer: GroupSerializer[Array[Int]] = Serializer.INT_ARRAY
+  implicit def longArraySerializer: GroupSerializer[Array[Long]] = Serializer.LONG_ARRAY
+  implicit def shortArraySerializer: GroupSerializer[Array[Short]] = Serializer.SHORT_ARRAY
+  implicit def byteArraySerializer: GroupSerializer[Array[Byte]] = Serializer.BYTE_ARRAY_DELTA
+  implicit def charArraySerializer: GroupSerializer[Array[Char]] = Serializer.CHAR_ARRAY
+  implicit def doubleArraySerializer: GroupSerializer[Array[Double]] = Serializer.DOUBLE_ARRAY
+  implicit def floatArraySerializer: GroupSerializer[Array[Float]] = Serializer.FLOAT_ARRAY
 }

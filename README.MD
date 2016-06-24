@@ -6,26 +6,28 @@ Scala wrappers for MapDB
 In your `build.sbt`:
 ```scala
 libraryDependencies ++= Seq(
-  "com.github.karasiq" %% "mapdbutils" % "1.1.1",
-  "org.mapdb" % "mapdb" % "2.0-beta12"
+  "com.github.karasiq" %% "mapdbutils" % "1.2.0-SNAPSHOT",
+  "org.mapdb" % "mapdb" % "3.0.0-RC2"
 )
 ```
 
 ## Basic DB and map
 ```scala
+import org.mapdb.DBMaker
 import com.karasiq.mapdb.MapDbFile
-import com.karasiq.mapdb.MapDbWrapper._
+import com.karasiq.mapdb.MapDbImplicits._
+import com.karasiq.mapdb.serialization.MapDbSerializer
 
 // Create DB
-val mapDb = MapDbFile(DBMaker.memoryDB().transactionDisable().make())
+val mapDb = DBMaker.memoryDB().make().scala
 
-// Create basic hash map
+// Create map
 val map = mapDb.hashMap[String, String]("test")
 
-// Create custom hash map
+// Create custom map
 val map1 = mapDb.createHashMap[String, String]("test")(_
-  .keySerializer(MapDbSerializer[String])
-  .valueSerializer(MapDbSerializer[String])
+  .counterEnable()
+  .expireAfterCreate(10000)
 )
 ```
 
@@ -43,33 +45,24 @@ val serializer = MapDbSerializer[Test2]
 
 ## DB file producer
 ```scala
-object TestDbProducer extends MapDbFileProducer {
-  override protected def setSettings(dbMaker: Maker): Maker = {
-    // Example settings
-    dbMaker
-      .compressionEnable()
-      .executorEnable()
-      .cacheSoftRefEnable()
-  }
-}
+import com.karasiq.mapdb.MapDbFile
+val producer = MapDbFile.producer(_
+  .executorEnable()
+  .fileMmapEnable()
+)
 
-object TestSingleDbProducer extends MapDbSingleFileProducer(Paths.get("test1.db")) {
-  override protected def setSettings(dbMaker: Maker): Maker = {
-    // Example settings
-    dbMaker
-      .compressionEnable()
-      .executorEnable()
-      .cacheSoftRefEnable()
-  }
-}
+val single = MapDbFile("test1.db")(_
+  .executorEnable()
+  .fileMmapEnable()
+)
 
 // Opens DB
-val db = TestDbProducer(Paths.get("test.db"))
-val db1 = TestSingleDbProducer()
+val db = producer("test.db")
+val db1 = single()
 
 // Closes previously opened DBs
-TestDbProducer.close()
-TestSingleDbProducer.close()
+producer.close()
+single.close()
 ```
 
 ## Transactions
@@ -88,19 +81,6 @@ val result: String = mapDb.withTransaction { implicit tx ⇒
   map.put("key", "value")
   "result"
 }
-```
-
-## Indexes
-```scala
-import com.karasiq.mapdb.index.MapDbIndex
-import com.karasiq.mapdb.index.MapDbIndex.IndexMaps
-
-val mapDb = MapDbFile(DBMaker.memoryDB().transactionDisable().make())
-val map = mapDb.hashMap[String, String]("test")
-val index = MapDbIndex.secondaryKey[String, String, Int](map.underlying(), (k, v) ⇒ v.hashCode(), IndexMaps.mapDbHashMap(mapDb.db, "test_index")) // Uses hash code as key
-
-map.put("key1", "value1")
-index.get("value1".hashCode) // -> Some("key1")
 ```
 
 # License

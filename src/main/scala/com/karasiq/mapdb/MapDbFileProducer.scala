@@ -1,7 +1,7 @@
 package com.karasiq.mapdb
 
-import java.io.Closeable
-import java.nio.file.{Files, Path}
+import java.io.{Closeable, File}
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.TimeUnit
 
 import com.karasiq.mapdb.transaction.TransactionScheduler
@@ -40,9 +40,19 @@ sealed abstract class MapDbFile extends MapDbProvider with TransactionScheduler 
 object MapDbFile {
   def apply(database: DB, dbPath: Path = null): MapDbFile = new MapDbFile {
     override val db: DB = database
-
     override val path: Path = dbPath
   }
+
+  def producer(settings: DBMaker.Maker ⇒ DBMaker.Maker): MapDbFileProducer = new MapDbFileProducer {
+    override protected def setSettings(dbMaker: Maker): Maker = settings(dbMaker)
+  }
+
+  def apply(path: Path)(settings: DBMaker.Maker ⇒ DBMaker.Maker): MapDbSingleFileProducer = new MapDbSingleFileProducer(path) {
+    protected def setSettings(dbMaker: Maker) = settings(dbMaker)
+  }
+
+  def apply(path: String)(settings: DBMaker.Maker ⇒ DBMaker.Maker): MapDbSingleFileProducer = apply(Paths.get(path))(settings)
+  def apply(path: File)(settings: DBMaker.Maker ⇒ DBMaker.Maker): MapDbSingleFileProducer = apply(path.toPath)(settings)
 }
 
 /**
@@ -58,17 +68,21 @@ abstract class MapDbFileProducer extends Closeable {
 
   private val dbMap = TrieMap.empty[String, MapDbFile]
 
-  final def apply(f: Path): MapDbFile = synchronized {
+  final def apply(path: Path): MapDbFile = synchronized {
     dbMap.filter(_._2.db.isClosed).foreach(dbMap -= _._1) // Remove closed
-    dbMap.getOrElseUpdate(f.toString, createDb(f))
+    dbMap.getOrElseUpdate(path.toString, createDb(path))
   }
 
-  private def close(k: String): Unit = synchronized {
-    dbMap.remove(k).foreach(_.close())
+  final def apply(path: String): MapDbFile = apply(Paths.get(path))
+
+  final def apply(path: File): MapDbFile = apply(path.toPath)
+
+  private def close(path: String): Unit = synchronized {
+    dbMap.remove(path).foreach(_.close())
   }
 
-  final def close(f: Path): Unit = synchronized {
-    close(f.toString)
+  final def close(path: Path): Unit = synchronized {
+    close(path.toString)
   }
 
   override def close(): Unit = synchronized {
@@ -76,21 +90,14 @@ abstract class MapDbFileProducer extends Closeable {
   }
 }
 
-abstract class MapDbSingleFileProducer(path: Path) extends Closeable {
+abstract class MapDbSingleFileProducer(final val path: Path) extends Closeable {
   assert(!Files.exists(path) || Files.isRegularFile(path), s"Not a file: $path")
 
   protected def setSettings(dbMaker: DBMaker.Maker): DBMaker.Maker
 
-  private val producer = MapDbFileProducer(setSettings)
+  private val producer = MapDbFile.producer(setSettings)
 
   def apply(): MapDbFile = producer(path)
 
   override def close(): Unit = producer.close()
-}
-
-
-object MapDbFileProducer {
-  def apply(f: DBMaker.Maker ⇒ DBMaker.Maker): MapDbFileProducer = new MapDbFileProducer {
-    override protected def setSettings(dbMaker: Maker): Maker = f(dbMaker)
-  }
 }

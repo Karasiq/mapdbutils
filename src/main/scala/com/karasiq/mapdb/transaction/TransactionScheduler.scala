@@ -8,8 +8,15 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
 
+/**
+  * Transaction context holder
+  */
+sealed trait TxCtx {
+  def doInTransaction[T](tx: TxCtx ⇒ T): Future[T]
+}
+
 trait TransactionScheduler { self: MapDbProvider ⇒
-  protected final val txSchedulerExecutionContext = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+  protected final lazy val txSchedulerExecutionContext = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
 
   private object NoTransaction extends TxCtx {
     override def doInTransaction[T](tx: TxCtx ⇒ T): Future[T] = {
