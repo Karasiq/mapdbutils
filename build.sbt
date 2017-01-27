@@ -5,8 +5,9 @@ val commonSettings = Seq(
   version := "1.2.0-SNAPSHOT",
   isSnapshot := version.value.endsWith("SNAPSHOT"),
   scalaVersion := "2.11.8",
+  // crossScalaVersions := Seq("2.11.8", "2.12.1"), // TODO: https://github.com/jankotek/mapdb/issues/795
   libraryDependencies ++= Seq(
-    "org.mapdb" % "mapdb" % "3.0.0-RC2" % "provided"
+    "org.mapdb" % "mapdb" % "3.0.3"
   ),
   publishMavenStyle := true,
   publishTo := {
@@ -36,9 +37,9 @@ val commonSettings = Seq(
 val rootSettings = Seq(
   name := "mapdbutils",
   libraryDependencies ++= Seq(
-    "com.typesafe" % "config" % "1.3.0",
-    "eu.timepit" %% "refined" % "0.3.1",
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+    "com.typesafe" % "config" % "1.3.1",
+    "eu.timepit" %% "refined" % "0.7.0",
+    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
   )
 )
 

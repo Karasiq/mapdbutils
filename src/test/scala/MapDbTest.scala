@@ -29,7 +29,7 @@ class MapDbTest extends FlatSpec with Matchers {
   }
 
   // TODO: org.mapdb.DBException$GetVoid: Record does not exist, recid=9
-  ignore should "rollback" in {
+  it should "rollback" in {
     val mapDb = MapDbFile(DBMaker.memoryDB().transactionEnable().make())
     val map = mapDb.hashMap[String, String]("test").asScala
     intercept[IllegalArgumentException] {
@@ -47,7 +47,7 @@ class MapDbTest extends FlatSpec with Matchers {
   }
 
   // TODO: java.lang.NoClassDefFoundError: org/mapdb/org.mapdb.
-  ignore should "create hash set" in {
+  it should "create hash set" in {
     val mapDb = MapDbFile(DBMaker.memoryDB().transactionEnable().make())
     val set = mapDb.hashSet[String]("test").asScala
 
