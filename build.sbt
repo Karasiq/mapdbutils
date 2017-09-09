@@ -5,9 +5,9 @@ val commonSettings = Seq(
   version := "1.2.0-SNAPSHOT",
   isSnapshot := version.value.endsWith("SNAPSHOT"),
   scalaVersion := "2.11.8",
-  // crossScalaVersions := Seq("2.11.8", "2.12.1"), // TODO: https://github.com/jankotek/mapdb/issues/795
+  crossScalaVersions := Seq("2.11.8", "2.12.3"), // TODO: https://github.com/jankotek/mapdb/issues/795
   libraryDependencies ++= Seq(
-    "org.mapdb" % "mapdb" % "3.0.3"
+    "org.mapdb" % "mapdb" % "3.0.5"
   ),
   publishMavenStyle := true,
   publishTo := {

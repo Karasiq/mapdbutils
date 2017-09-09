@@ -1,15 +1,16 @@
 import java.time.Instant
 
-import com.karasiq.mapdb.MapDbFile
-import com.karasiq.mapdb.MapDbImplicits._
-import com.karasiq.mapdb.serialization.MapDbSerializer
-import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
+import scala.collection.JavaConverters._
+
 import eu.timepit.refined.numeric.Positive
 import org.mapdb.{DBMaker, Serializer}
 import org.scalatest.{FlatSpec, Matchers}
 import shapeless.tag.@@
 
-import scala.collection.JavaConverters._
+import com.karasiq.mapdb.MapDbFile
+import com.karasiq.mapdb.MapDbImplicits._
+import com.karasiq.mapdb.serialization.MapDbSerializer
+import com.karasiq.mapdb.serialization.MapDbSerializer.Default._
 
 case class TestCaseClass(str: String, int: Int, times: Seq[Instant])
 
@@ -30,7 +31,7 @@ class MapDbTest extends FlatSpec with Matchers {
 
   // TODO: org.mapdb.DBException$GetVoid: Record does not exist, recid=9
   it should "rollback" in {
-    val mapDb = MapDbFile(DBMaker.memoryDB().transactionEnable().make())
+    val mapDb = MapDbFile(DBMaker.tempFileDB().transactionEnable().make())
     val map = mapDb.hashMap[String, String]("test").asScala
     intercept[IllegalArgumentException] {
       mapDb.withTransaction { implicit tx ⇒
